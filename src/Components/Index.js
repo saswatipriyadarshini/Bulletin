@@ -1,10 +1,12 @@
 import React from 'react';
 import axios from 'axios';
+import { connect } from 'react-redux';
 import {
   Card, Button, CardHeader, CardFooter, CardBody, Form, FormGroup, Label, Input, Col,
   CardTitle, CardText, Modal, ModalHeader, ModalBody, ModalFooter
 } from 'reactstrap';
 import './index.css';
+import { postsAction } from '../actions/bulletinAction';
 
 class Posts extends React.Component {
   constructor(props) {
@@ -22,14 +24,36 @@ class Posts extends React.Component {
   }
 
   componentDidMount() {
-    axios.get('https://jsonplaceholder.typicode.com/posts')
+    var self = this;
+      axios.get('https://jsonplaceholder.typicode.com/posts')
       .then(
         (result) => {
-          this.setState({
-            posts: result.data
-          })
+          self.props.postsAction(
+            result.data
+          )
         }
       )
+    
+
+    // this.props.postsAction(
+    //   axios.get('https://jsonplaceholder.typicode.com/posts')
+    //   .then(
+    //     (result) => {
+    //       debugger
+    //       return (
+    //         result.data
+    //       )
+    //     }
+    //   )
+    // )
+  }
+
+  componentWillReceiveProps(nextProps){
+    if(this.props.posts !== nextProps.posts){
+      this.setState({
+        posts: nextProps.posts
+      })
+    }
   }
 
   toggle(item) {
@@ -139,4 +163,14 @@ class Posts extends React.Component {
   }
 }
 
-export default Posts;
+const mapStateToProps = (state) => {
+  return {
+      posts: state.bulletin.posts
+    }
+}
+
+const mapDispatchToProps = dispatch => ({
+  postsAction: (data) => dispatch(postsAction(data))
+})
+
+export default connect(mapStateToProps, mapDispatchToProps) (Posts);
