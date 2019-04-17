@@ -14,6 +14,7 @@ class Posts extends React.Component {
 
     this.state = {
       createPostModal: false,
+      firstPosts: [],
       posts: [],
       modal: false,
       item: {},
@@ -25,7 +26,7 @@ class Posts extends React.Component {
 
   componentDidMount() {
     var self = this;
-      axios.get('https://jsonplaceholder.typicode.com/posts')
+    axios.get('https://jsonplaceholder.typicode.com/posts')
       .then(
         (result) => {
           self.props.postsAction(
@@ -33,24 +34,30 @@ class Posts extends React.Component {
           )
         }
       )
-    
-
-    // this.props.postsAction(
-    //   axios.get('https://jsonplaceholder.typicode.com/posts')
-    //   .then(
-    //     (result) => {
-    //       debugger
-    //       return (
-    //         result.data
-    //       )
-    //     }
-    //   )
-    // )
+    var own = this;
+    window.addEventListener('scroll', own.scrollHandler.bind(own), false);
   }
 
-  componentWillReceiveProps(nextProps){
-    if(this.props.posts !== nextProps.posts){
+  componentWillUnmount = () => {
+    window.removeEventListener('scroll', this.scrollHandler, false);
+  }
+
+  scrollHandler = () => {
+    if((window.innerHeight + window.scrollY) >= (document.body.offsetHeight - 100)){
+      var value = this.state.posts.slice(this.state.firstPosts.length , this.state.firstPosts.length + 5);
+      var posts_to_show = this.state.firstPosts;
+      var arr = posts_to_show.concat(value);
       this.setState({
+        firstPosts: arr 
+      })
+    }
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if(this.props.posts !== nextProps.posts) {
+      var five_Posts = nextProps.posts.slice(0, 5);
+      this.setState({
+        firstPosts: five_Posts,
         posts: nextProps.posts
       })
     }
@@ -103,7 +110,7 @@ class Posts extends React.Component {
   }
 
   render() {
-    const { posts, item } = this.state;
+    const { firstPosts, posts, item } = this.state;
     return (
       <div className='posts__container'>
         <Button color="primary" onClick={this.createPostToggle.bind(this)}>Create Post</Button>
@@ -133,7 +140,7 @@ class Posts extends React.Component {
 
         {/* all posts */}
         {
-          posts.map((item, index) => {
+          firstPosts.map((item, index) => {
             return (
               <Card key={'key' + index}>
                 <CardHeader>{item.title}</CardHeader>
@@ -165,12 +172,12 @@ class Posts extends React.Component {
 
 const mapStateToProps = (state) => {
   return {
-      posts: state.bulletin.posts
-    }
+    posts: state.bulletin.posts
+  }
 }
 
 const mapDispatchToProps = dispatch => ({
   postsAction: (data) => dispatch(postsAction(data))
 })
 
-export default connect(mapStateToProps, mapDispatchToProps) (Posts);
+export default connect(mapStateToProps, mapDispatchToProps)(Posts);
